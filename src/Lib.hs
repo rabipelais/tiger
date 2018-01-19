@@ -6,4 +6,4 @@ module Lib
 import Protolude
 
 someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+someFunc = undefined

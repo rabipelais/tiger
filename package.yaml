@@ -22,9 +22,11 @@ description:         Please see the README on Github at <https://github.com/rabi
 dependencies:
 - base >= 4.7 && < 5
 - protolude
+- unordered-containers
 
 default-extensions:
 - NoImplicitPrelude
+- OverloadedStrings
 
 library:
   source-dirs: src
