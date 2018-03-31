@@ -2,6 +2,7 @@
 
 module DOT ( Tree(..), toDOT ) where
 
+import qualified Data.Text as T
 import           Protolude as P
 
 data Tree a = Tree a [Tree a] deriving Show
@@ -12,21 +13,7 @@ newtype Label = Label Text
 data Edge = Edge Id Id
 
 renderAsDOT :: Tree Node -> Text
-renderAsDOT t = showText "graph g {\n" .
-                showSepByLines showNode (nodes t) .
-                showSepByLines showEdge (edges t) .
-                showText "}" $ ""
-  where nodes (Tree n ts) = n : concatMap nodes ts
-        edges (Tree (Node i1 _) ts) =
-          [ Edge i1 i2 | Tree (Node i2 _) _ <- ts ] ++ concatMap edges ts
-        showNode (Node i l) =
-          showId i . showText " [ label=\"" . showLabel l . showText "\" ]"
-        showId (Id i) = showText i
-        showLabel (Label l) = showText l
-        showEdge (Edge a b) = showId a . showText " -- " . showId b
-        showSepByLines f = foldr (\x s -> f x . showText "\n" . s) id
-        showText = (<>)
-        id a = a
+renderAsDOT t = drawTree t
 
 addIds :: Tree Text -> Tree Node
 addIds = flip evalState (0 :: Int) . go
@@ -38,3 +25,23 @@ addIds = flip evalState (0 :: Int) . go
 
 toDOT :: Tree Text -> Text
 toDOT = renderAsDOT . addIds
+
+
+-- | Neat 2-dimensional drawing of a tree.
+drawTree :: Tree Node -> Text
+drawTree  = T.unlines . draw
+
+draw :: Tree Node -> [Text]
+draw (Tree n ts0) =  (showNode n) : (drawSubTrees ts0)
+  where
+    showNode (Node i l) =
+      showLabel l
+    showId (Id i) = i
+    showLabel (Label l) = l
+    drawSubTrees [] = []
+    drawSubTrees [t] =
+        "|" : shift "`- " "   " (draw t)
+    drawSubTrees (t:ts) =
+        "|" : shift "+- " "|  " (draw t) <> drawSubTrees ts
+
+    shift first other = zipWith (<>) (first : repeat other)

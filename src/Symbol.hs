@@ -1,4 +1,4 @@
-module Symbol (Symbol(..), symbol, name
+module Symbol (Symbol(..), symbol
               , StringTable, emptyStringTable
               , Table, Symbol.empty
               , look, enter) where
