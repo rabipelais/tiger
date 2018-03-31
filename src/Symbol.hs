@@ -1,13 +1,13 @@
-module Symbol (Symbol, symbol, name
+module Symbol (Symbol(..), symbol, name
               , StringTable, emptyStringTable
               , Table, Symbol.empty
               , look, enter) where
 
-import Protolude hiding (Symbol)
-import Data.HashMap.Strict as M hiding (size)
+import           Data.HashMap.Strict as M hiding (size)
+import           Protolude           hiding (Symbol)
 
 data Symbol =
-  Symbol { name :: Text
+  Symbol { name     :: Text
          , uniqueId :: Int}
   deriving (Show)
 
@@ -23,7 +23,7 @@ instance Hashable Symbol where
 -- Computing the size of a HashMap takes O(n) time, so we cache it.
 data StringTable =
   StringTable { hashMap :: HashMap Text Symbol
-              , size :: Int}
+              , size    :: Int}
   deriving (Show)
 
 emptyStringTable :: StringTable

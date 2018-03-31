@@ -2,85 +2,94 @@ module Parser where
 
 import           Protolude                  hiding (many, option, try, (<|>))
 
-import           Text.Megaparsec
-import           Text.Megaparsec.Language   (javaStyle)
+import qualified Control.Monad.Fail         as Fail
 
+import           Text.Megaparsec
+import           Text.Megaparsec.Char       as C
 import qualified Text.Megaparsec.Char.Lexer as Tok
 import qualified Text.Megaparsec.Expr       as Ex
 
 import           AbSyn
 import           Symbol                     hiding (symbol)
 
-lexer :: Tok.TokenParser ()
-lexer = Tok.makeTokenParser style
+type Parser = Parsec Void Text
+
+--(<¿>) = flip (<?>)
+
+sc :: Parser () -- ‘sc’ stands for “space consumer”
+sc = Tok.space space1 lineComment blockComment
   where
-    ops = ["+", "*", "-", "/", "<", "<=", ">", ">=", ":=", "&", "|"]
-    names = ["array", "break", "do", "else", "end", "for", "function", "if", "in", "let",
-             "nil", "of", "then", "to", "type", "var", "while"]
-    style = javaStyle {
-      Tok.reservedOpNames = ops
-      , Tok.reservedNames = names}
+    lineComment  = Tok.skipLineComment "//"
+    blockComment = Tok.skipBlockComment "/*" "*/"
 
-integer :: Parser Integer
-integer = Tok.integer lexer
-
-parens :: Parser a -> Parser a
-parens = Tok.parens lexer
-
-braces :: Parser a -> Parser a
-braces = Tok.braces lexer
-
-brackets :: Parser a -> Parser a
-brackets = Tok.brackets lexer
-
-commaSep :: Parser a -> Parser [a]
-commaSep = Tok.commaSep lexer
-
-semiSep :: Parser a -> Parser [a]
-semiSep = Tok.semiSep lexer
-
-identifier :: Parser Text
-identifier = toS <$> Tok.identifier lexer
-
-reserved :: Text -> Parser ()
-reserved = Tok.reserved lexer . toS
+lexeme :: Parser a -> Parser a
+lexeme = Tok.lexeme sc
 
 symbol :: Text -> Parser Text
-symbol t = toS <$> (Tok.symbol lexer $ toS t)
+symbol = Tok.symbol sc
 
-reservedOp :: Text -> Parser ()
-reservedOp = Tok.reservedOp lexer . toS
+integer :: Parser Integer
+integer = lexeme Tok.decimal
+
+parens :: Parser a -> Parser a
+parens = between (symbol "(") (symbol ")")
+
+braces :: Parser a -> Parser a
+braces = between (symbol "{") (symbol "}")
+
+brackets :: Parser a -> Parser a
+brackets = between (symbol "[") (symbol "]")
+
+commaSep :: Parser a -> Parser [a]
+commaSep p = p `sepBy` (symbol ",")
+
+semiSep :: Parser a -> Parser [a]
+semiSep p = p `sepBy` (symbol ";")
+
+identifier :: Parser Text
+identifier = toS <$> ((lexeme . try) (p >>= check))
+  where
+    p       = (:) <$> letterChar <*> many alphaNumChar
+    check x = if x `elem` rws
+                then Fail.fail $ "keyword " ++ show x ++ " cannot be an identifier"
+                else return x
+
+rws = [ "array", "break", "do", "else", "end", "for", "function", "if", "in"
+      , "let", "nil", "of", "then", "to", "type", "var", "while"]
+
+reserved :: Text -> Parser ()
+reserved w = (lexeme . try) (C.string w *> notFollowedBy alphaNumChar)
+
+charLiteral :: Parser Char
+charLiteral = char '\'' *> charLiteral <* char '\''
 
 stringLiteral :: Parser Text
-stringLiteral = toS <$> Tok.stringLiteral lexer
-
-whiteSpace :: Parser ()
-whiteSpace = Tok.whiteSpace lexer
+stringLiteral = toS <$> (char '"' >> manyTill charLiteral (char '"'))
 
 ------------------------------------------------------
 -- Parser -------------------------------------------
 
-binary s f assoc = Ex.Infix (reservedOp s >> return (\l r -> OpExp l f r)) assoc
-prefix s f = Ex.Prefix (reservedOp s >> return (\x -> OpExp (IntExp 0) f x))
+binary s f assoc = assoc (symbol s >> return (\l r -> OpExp l f r))
+prefix s f = Ex.Prefix (symbol s >> return (\x -> OpExp (IntExp 0) f x))
 
 table = [
       [prefix "-" MinusOp],
 
-      [binary "*" TimesOp Ex.AssocLeft,
-      binary "/" DivideOp Ex.AssocLeft],
+      [binary "*" TimesOp Ex.InfixL,
+      binary "/" DivideOp Ex.InfixL],
 
-      [binary "+" PlusOp Ex.AssocLeft,
-      binary "-" MinusOp Ex.AssocLeft],
+      [binary "+" PlusOp Ex.InfixL,
+      binary "-" MinusOp Ex.InfixL],
 
-      [binary "=" EqOp Ex.AssocNone,
-      binary "<>" NeqOp Ex.AssocNone,
-      binary "<=" LeOp Ex.AssocNone,
-      binary "<" LtOp Ex.AssocNone,
-      binary ">=" GeOp Ex.AssocNone,
-      binary ">" GtOp Ex.AssocNone],
+      [binary "=" EqOp Ex.InfixN,
+      binary "<>" NeqOp Ex.InfixN,
+      binary "<=" LeOp Ex.InfixN,
+      binary "<" LtOp Ex.InfixN,
+      binary ">=" GeOp Ex.InfixN,
+      binary ">" GtOp Ex.InfixN],
 
-      [binary "&" AndOp Ex.AssocRight],
-      [binary "|" OrOp Ex.AssocRight]]
+      [binary "&" AndOp Ex.InfixR],
+      [binary "|" OrOp Ex.InfixR]]
 
 newSymbol i = Symbol i 0
 -------------------------------------------------------------------------------
@@ -167,7 +176,6 @@ dec = choice [typeDec, varDec, funDec]
 -- @
 -- This grammar is kind of confusing and left recursive, we use the
 -- combinator `lfact` as a helper transformation.
-
 var :: Parser Exp
 var = VarExp <$> lfact pId (fieldVar <|> subVar)
   where
@@ -201,7 +209,7 @@ int = IntExp <$> integer
 string :: Parser Exp
 string = StringExp <$> stringLiteral
 
-binOp = Ex.makeExpressionParser simpleExpr table
+binOp = Ex.makeExprParser simpleExpr table
 
 -- | Parses function call of the form @id (args)@
 funCall :: Parser Exp
@@ -226,7 +234,7 @@ recordExp = do
 -- | A sequence of expressions @{expr{; expr}}@
 parseSeq = SeqExp <$> (parens exprs <|> exprs)
   where
-    exprs = sepBy1 expr (symbol ";")
+    exprs = sepBy expr (symbol ";")
 
 -- | An assignment expression @lvar := expr@
 assign :: Parser Exp
@@ -302,8 +310,8 @@ simpleExpr = choice
   , parens expr
   , try funCall
   , try recordExp
-  , array
-  , assign
+  , try array
+  , try assign
   , var]
 
 expr :: Parser Exp
@@ -318,7 +326,7 @@ expr = choice
 
 -- | A valid Tiger program is an expression, possibly with whitespace before.
 parseProgram :: Parser Exp
-parseProgram = whiteSpace >> expr
+parseProgram = between sc eof expr
 
-parser :: Text -> Text -> Either ParseError Exp
+parser :: Text -> Text -> Either (ParseError (Token Text) Void) Exp
 parser name input = parse parseProgram (toS name) (toS input)

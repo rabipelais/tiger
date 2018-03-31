@@ -2,9 +2,9 @@
 
 module AbSyn where
 
-import Symbol (Symbol)
+import           Protolude hiding (Symbol)
 
-import Protolude hiding (Symbol)
+import           Symbol    (Symbol)
 
 data Var =
   SimpleVar Symbol
@@ -15,7 +15,7 @@ data Var =
 data Exp =
   VarExp Var
   | NilExp
-  | IntExp Int
+  | IntExp Integer
   | StringExp Text
   | CallExp Symbol [Exp]
   | OpExp Exp Oper Exp
@@ -23,7 +23,7 @@ data Exp =
   | SeqExp [Exp]
   | AssignExp Var Exp
   | IfExp Exp Exp (Maybe Exp)
-  | WhilExp Exp Exp
+  | WhileExp Exp Exp
   | ForExp Symbol {- escape :: bool ref -} Exp Exp Exp -- var, lo, hi, body
   | BreakExp
   | LetExp [Dec] Exp
@@ -31,7 +31,7 @@ data Exp =
   deriving (Show)
 
 data Dec =
-  FunctionDec [FunDec]
+  FunDec Function
   | VarDec Symbol {- escape :: bool ref -} (Maybe Symbol) Exp -- name, typ, init
   | TypeDec Symbol Ty
   deriving (Show)
@@ -44,18 +44,18 @@ data Ty =
 
 data Oper =
   PlusOp | MinusOp | TimesOp | DivideOp | EqOp
-  | NeqOp | LtOp | LeOp | GtOp | GeOp
+  | NeqOp | LtOp | LeOp | GtOp | GeOp | AndOp | OrOp
   deriving (Show)
 
 data Field =
   Field { name :: Symbol
         {-, escape :: bool ref -}
-        , typ :: Symbol}
+        , typ  :: Symbol}
   deriving (Show)
 
-data FunDec =
-  FunDec { name :: Symbol
-         , params :: [Field]
-         , result :: Maybe Symbol
-         , body :: Exp}
+data Function =
+  Function { name   :: Symbol
+           , params :: [Field]
+           , result :: Maybe Symbol
+           , body   :: Exp}
   deriving (Show)
