@@ -327,7 +327,7 @@ expr = choice
 
 -- | A valid Tiger program is an expression, possibly with whitespace before.
 parseProgram :: Parser Exp
-parseProgram = between sc eof expr
+parseProgram = between sc (sc <|> eof) expr
 
 parser :: Text -> Text -> Either (ParseError (Token Text) Void) Exp
 parser name input = parse parseProgram (toS name) (toS input)
