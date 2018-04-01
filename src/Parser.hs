@@ -64,7 +64,7 @@ charLiteral :: Parser Char
 charLiteral = char '\'' *> charLiteral <* char '\''
 
 stringLiteral :: Parser Text
-stringLiteral = toS <$> (char '"' >> manyTill charLiteral (char '"'))
+stringLiteral = toS <$> (char '"' >> manyTill Tok.charLiteral (char '"'))
 
 ------------------------------------------------------
 -- Parser -------------------------------------------
