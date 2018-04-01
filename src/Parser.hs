@@ -49,7 +49,8 @@ semiSep p = p `sepBy` (symbol ";")
 identifier :: Parser Text
 identifier = toS <$> ((lexeme . try) (p >>= check))
   where
-    p       = (:) <$> letterChar <*> many alphaNumChar
+    p       = (:) <$> letterChar <*> many validChar
+    validChar = alphaNumChar <|> (char '_')
     check x = if x `elem` rws
                 then Fail.fail $ "keyword " ++ show x ++ " cannot be an identifier"
                 else return x
