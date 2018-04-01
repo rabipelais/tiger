@@ -8,9 +8,14 @@ import           Text.Megaparsec.Error (parseErrorPretty)
 main :: IO ()
 main = do
   args <- getArgs
-  mapM_ putStrLn args
-  result <- case args of
-    []  -> fmap (parser "<stdin>") getContents
-    [f] -> parser (toS f) <$> (toS <$> readFile f)
-    _   -> undefined
-  either (\a -> hPutStrLn stderr (parseErrorPretty a)) (putStrLn . expToDOT) result
+  sources <- mapM readFile args
+  let zipped = zip args sources
+  putText "====== SOURCE ======="
+  mapM_ (\(t, f) -> putStrLn t >> putStrLn f) zipped
+  putText "====== PARSE ======="
+  let results' = map (\(t, f) -> parser (toS t) (toS f)) zipped
+  let results = zip args results'
+  mapM_ (\(t, r) -> either
+          (\a -> hPutStrLn stderr (parseErrorPretty a))
+          (\x -> (putStrLn t) >> (putStrLn $ expToDOT x)) r)
+    results
