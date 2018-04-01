@@ -25,6 +25,10 @@ dependencies:
 - unordered-containers
 - megaparsec
 - text
+- hspec
+- directory
+- hspec-megaparsec
+- filepath
 
 default-extensions:
 - NoImplicitPrelude
