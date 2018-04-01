@@ -234,7 +234,7 @@ recordExp = do
       return (name, exp)
 
 -- | A sequence of expressions @{expr{; expr}}@
-parseSeq = SeqExp <$> (parens exprs <|> exprs)
+parseSeq = SeqExp <$> exprs
   where
     exprs = sepBy expr (symbol ";")
 
@@ -305,20 +305,23 @@ array = do
 
 simpleExpr :: Parser Exp
 simpleExpr = choice
-  [ parens binOp
-  , nil
+  [ nil
   , int
   , Parser.string
-  , parens expr
+  , parens parseSeq
+  , parens binOp
   , try funCall
   , try recordExp
   , try array
   , try assign
   , var]
 
+noop = try (symbol "(" >> symbol ")") >> (return $ SeqExp [])
+
 expr :: Parser Exp
 expr = choice
-  [ Parser.break
+  [ noop
+  , Parser.break
   , parseIf
   , while
   , Parser.for
