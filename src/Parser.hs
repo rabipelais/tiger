@@ -46,11 +46,12 @@ commaSep p = p `sepBy` (symbol ",")
 semiSep :: Parser a -> Parser [a]
 semiSep p = p `sepBy` (symbol ";")
 
+validChar = alphaNumChar <|> (char '_')
+
 identifier :: Parser Text
 identifier = toS <$> ((lexeme . try) (p >>= check))
   where
     p       = (:) <$> letterChar <*> many validChar
-    validChar = alphaNumChar <|> (char '_')
     check x = if x `elem` rws
                 then Fail.fail $ "keyword " ++ show x ++ " cannot be an identifier"
                 else return x
@@ -59,13 +60,13 @@ rws = [ "array", "break", "do", "else", "end", "for", "function", "if", "in"
       , "let", "nil", "of", "then", "to", "type", "var", "while"]
 
 reserved :: Text -> Parser ()
-reserved w = (lexeme . try) (C.string w *> notFollowedBy alphaNumChar)
+reserved w = (lexeme . try) (C.string w *> notFollowedBy validChar)
 
 charLiteral :: Parser Char
 charLiteral = char '\'' *> charLiteral <* char '\''
 
 stringLiteral :: Parser Text
-stringLiteral = toS <$> (char '"' >> manyTill Tok.charLiteral (char '"'))
+stringLiteral = toS <$> (char '"' >> manyTill Tok.charLiteral (char '"') <* sc)
 
 ------------------------------------------------------
 -- Parser -------------------------------------------
@@ -270,7 +271,7 @@ for :: Parser Exp
 for = do
   reserved "for"
   name <- newSymbol <$> identifier
-  reserved ":="
+  symbol ":="
   lo <- expr
   reserved "to"
   hi <- expr
