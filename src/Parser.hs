@@ -285,7 +285,7 @@ parseLet = do
   reserved "let"
   decs <- many dec
   reserved "in"
-  exp <- many expr
+  exp <- expr `sepBy` (symbol ";")
   reserved "end"
   return $ LetExp decs (SeqExp exp)
 
