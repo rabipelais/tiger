@@ -234,7 +234,7 @@ recordExp = do
       return (name, exp)
 
 -- | A sequence of expressions @{expr{; expr}}@
-parseSeq = SeqExp <$> exprs
+parseSeq = SeqExp <$> parens exprs
   where
     exprs = sepBy expr (symbol ";")
 
@@ -285,9 +285,9 @@ parseLet = do
   reserved "let"
   decs <- many dec
   reserved "in"
-  exp <- parseSeq
+  exp <- many expr
   reserved "end"
-  return $ LetExp decs exp
+  return $ LetExp decs (SeqExp exp)
 
 -- | @break@ statement.
 break :: Parser Exp
@@ -308,7 +308,7 @@ simpleExpr = choice
   [ nil
   , int
   , Parser.string
-  , parens parseSeq
+  , parseSeq
   , parens binOp
   , try funCall
   , try recordExp

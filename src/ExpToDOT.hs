@@ -65,6 +65,8 @@ operToLabel o = case o of
   LeOp     -> "<="
   GtOp     -> ">"
   GeOp     -> ">="
+  OrOp     -> "|"
+  AndOp    -> "&"
 
 recordFieldToTree :: (Symbol, Exp) -> Tree Text
 recordFieldToTree (s, e) = Tree "$AssignField" [symbolToTree s, expToTree e]
