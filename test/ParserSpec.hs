@@ -28,16 +28,16 @@ testCases = map (\n -> "test/testcases/test" <> (show n :: Text) <> ".tig") [1..
 spec :: Spec
 spec = do
   tests <- runIO (getSources testCases)
-  describe "Parse correct sources" $ do
+  describe "Parses correct sources" $ do
     forM_ tests $ \(f, s) ->
       it ("parses " <> toS f) $ do
         parser (toS f) `shouldSucceedOn` s
 
-  -- complex <- runIO (getSources ["test/testcases/queens.tig", "test/testcases/queens.tig"])
-  -- describe "Parses complex programs" $ do
-  --   forM_ complex $ \(f, s) ->
-  --     it ("parses " <> toS f) $ do
-  --       parser (toS f) `shouldFailOn` s
+  complex <- runIO (getSources ["test/testcases/queens.tig", "test/testcases/queens.tig"])
+  describe "Parses complex programs" $ do
+    forM_ complex $ \(f, s) ->
+      it ("parses " <> toS f) $ do
+        parser (toS f) `shouldSucceedOn` s
 
   failing <- runIO (getSources ["test/testcases/test49.tig" ])
   describe "Fails source with error" $ do
