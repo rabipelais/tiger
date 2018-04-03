@@ -316,12 +316,9 @@ simpleExpr = choice
   , try assign
   , var]
 
-noop = try (symbol "(" >> symbol ")") >> (return $ SeqExp [])
-
 expr :: Parser Exp
 expr = choice
-  [ noop
-  , Parser.break
+  [ Parser.break
   , parseIf
   , while
   , Parser.for
