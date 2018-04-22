@@ -2,13 +2,13 @@ module Env where
 
 import           Protolude hiding (empty)
 
-import           Symbol    (Table, empty)
-import           Types     (Type)
+import           Symbol    (Symbol (..), Table, empty, enter)
+import           Types     (Type (..))
 
 type TEnv = Table Type
 
 baseTEnv ::TEnv
-baseTEnv = empty
+baseTEnv = enter (Symbol "string") Types.String $ enter (Symbol "int") Types.Int empty
 
 data EnvEntry =
   VarEntry Type
