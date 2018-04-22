@@ -48,14 +48,14 @@ data Oper =
   deriving (Show)
 
 data Field =
-  Field { name :: Symbol
+  Field { fieldName :: Symbol
         {-, escape :: bool ref -}
-        , typ  :: Symbol}
+        , fieldType :: Symbol}
   deriving (Show)
 
 data Function =
-  Function { name   :: Symbol
-           , params :: [Field]
-           , result :: Maybe Symbol
-           , body   :: Exp}
+  Function { funName   :: Symbol
+           , funParams :: [Field]
+           , funResult :: Maybe Symbol
+           , funBody   :: Exp}
   deriving (Show)
