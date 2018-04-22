@@ -93,7 +93,7 @@ table = [
       [binary "&" AndOp Ex.InfixR],
       [binary "|" OrOp Ex.InfixR]]
 
-newSymbol i = Symbol i 0
+newSymbol i = Symbol i -- TODO?
 -------------------------------------------------------------------------------
 ------------------------- Declarations Parsers --------------------------------
 
