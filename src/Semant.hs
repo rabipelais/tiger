@@ -141,16 +141,16 @@ checkCompatibleTys :: Types.Type -> Types.Type -> Trans ()
 checkCompatibleTys ty1 ty2 =
   unless (ty1 `isCompatibleWith` ty2) $
   throwError $ IncompatibleTypes ("incompatible types " <> (show ty1) <> " and " <> (show ty2))
-  where
-    isCompatibleWith (Record _ u1) (Record _ u2) = u1 == u2
-    isCompatibleWith Nil (Record _ u2)           = True
-    isCompatibleWith (Record _ u1) Nil           = True
-    isCompatibleWith Int Int                     = True
-    isCompatibleWith String String               = True
-    isCompatibleWith (Array _ u1) (Array _ u2)   = u1 == u2
-    isCompatibleWith
-      (Name _ (Just t1)) (Name _ (Just t2))   = isCompatibleWith t1 t2
-    isCompatibleWith Unit Unit               = True
+
+isCompatibleWith (Record _ u1) (Record _ u2) = u1 == u2
+isCompatibleWith Nil (Record _ u2)           = True
+isCompatibleWith (Record _ u1) Nil           = True
+isCompatibleWith Int Int                     = True
+isCompatibleWith String String               = True
+isCompatibleWith (Array _ u1) (Array _ u2)   = u1 == u2
+isCompatibleWith (Name _ (Just t1)) (Name _ (Just t2))   = isCompatibleWith t1 t2
+isCompatibleWith Unit Unit               = True
+isCompatibleWith _ _ = False
 
 transLet :: [Dec] -> Exp -> Trans ExpTy
 transLet decs body = do
@@ -189,7 +189,7 @@ transVarDec sym maybeTy val = do
   tenv <- asks tEnv
   venv <- asks vEnv
   case maybeTy of
-    Just ty -> if look ty tenv == Just valTy
+    Just ty -> if fromMaybe False $ isCompatibleWith <$> look ty tenv <*> Just valTy
               then return (enter sym (VarEntry valTy) venv, tenv)
               else throwError $
                    MismatchedType ("variable " <> (show sym) <> " declared " <> (show ty) <> " but evaled to "<> (show valTy))
