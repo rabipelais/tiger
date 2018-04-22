@@ -118,7 +118,7 @@ checkArithmeticTy ty =
 checkComparableTy :: Types.Type -> Trans ()
 checkComparableTy ty =
   unless (isComparableTy ty) $
-  throwError $ MismatchedType ("arithmetic type (integer) required but got: " <> (show ty))
+  throwError $ MismatchedType ("type is not comparable: " <> (show ty))
   where
     isComparableTy Int    = True
     isComparableTy String = True
@@ -127,7 +127,7 @@ checkComparableTy ty =
 checkEqualityTy :: Types.Type -> Trans ()
 checkEqualityTy ty =
   unless (isEqualityTy ty) $
-  throwError $ MismatchedType ("arithmetic type (integer) required but got: " <> (show ty))
+  throwError $ MismatchedType ("type doesn't define equality: " <> (show ty))
   where
     isEqualityTy (Record _ _ ) = True
     isEqualityTy Nil           = True
