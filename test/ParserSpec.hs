@@ -33,7 +33,7 @@ spec = do
       it ("parses " <> toS f) $ do
         parser (toS f) `shouldSucceedOn` s
 
-  complex <- runIO (getSources ["test/testcases/queens.tig", "test/testcases/queens.tig"])
+  complex <- runIO (getSources ["test/testcases/queens.tig", "test/testcases/merge.tig"])
   describe "Parses complex programs" $ do
     forM_ complex $ \(f, s) ->
       it ("parses " <> toS f) $ do
