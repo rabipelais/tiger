@@ -18,4 +18,4 @@ data Type =
   | Nil
   | Unit
   | Name Symbol (Maybe Type) -- this is a ref in the book
-  deriving (Show)
+  deriving (Show, Eq)

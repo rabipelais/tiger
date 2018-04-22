@@ -13,7 +13,7 @@ baseTEnv = empty
 data EnvEntry =
   VarEntry Type
   | FunEntry {formals :: [Type], result :: Type}
-  deriving (Show)
+  deriving (Show, Eq)
 
 type VEnv = Table EnvEntry
 

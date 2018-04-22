@@ -44,7 +44,7 @@ symbol n t =
 --------------------------------------------------------------------------------
 
 newtype Table a = Table { unTable :: HashMap Symbol a }
-  deriving ( Show )
+  deriving (Show, Eq)
 
 empty :: Table a
 empty = Table M.empty
