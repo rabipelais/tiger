@@ -1,6 +1,6 @@
 module Env where
 
-import           Protolude hiding (empty)
+import           Protolude hiding (empty, Type)
 
 import           Symbol    (Symbol (..), Table, empty, enter)
 import           Types     (Type (..))

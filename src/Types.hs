@@ -1,6 +1,6 @@
 module Types where
 
-import           Protolude hiding (Symbol)
+import           Protolude hiding (Symbol, Type)
 
 import           Symbol    (Symbol)
 

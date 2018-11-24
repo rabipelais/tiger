@@ -1,6 +1,6 @@
 module ExpToDOT ( expToDOT ) where
 
-import           Protolude hiding (Symbol)
+import           Protolude hiding (Symbol, Type)
 
 import           AbSyn
 import           DOT       (Tree (..), toDOT)

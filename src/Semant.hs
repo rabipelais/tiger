@@ -1,14 +1,15 @@
+{-# LANGUAGE DuplicateRecordFields      #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE TupleSections              #-}
 
 module Semant where
 
-import           Protolude hiding (Symbol)
+import           Protolude hiding (Symbol, Type)
 
 import           AbSyn
 import           Env
-import           Symbol hiding (name)
+import           Symbol    hiding (name)
 import qualified Translate
 import           Types
 
@@ -33,6 +34,7 @@ instance Eq Error where
   IncompatibleTypes _ == IncompatibleTypes _ = True
   UnknownIdentifier _ == UnknownIdentifier _ = True
   _ == _ = False
+
 
 type Trans' = StateT [Types.Unique] (ReaderT Envs (ExceptT Error Identity))
 
