@@ -39,10 +39,41 @@ spec = do
       let e = emptyStringTable
           (var, t) = symbol "var" e
           (ty, t') = symbol "ty" t
-          res = Envs (enter var (VarEntry Types.Int) baseVEnv)baseTEnv
+          res = Envs (enter var (VarEntry Types.Int) baseVEnv) baseTEnv
       transDec (VarDec var Nothing (IntExp 10)) `shouldEvalTo` (Right res)
     it "errors if type constraint doesn't match var expression" $ do
       let e = emptyStringTable
           (var, t) = symbol "var" e
           (ty, t') = symbol "ty" t
       transDec (VarDec var (Just ty) (IntExp 10)) `shouldErrorWith` (MismatchedType "")
+    it "enters simple type into type environment" $ do
+      let e = emptyStringTable
+          (var, t) = symbol "tyvar" e
+          (ty, t') = symbol "int" t
+          res = Envs baseVEnv (enter var Types.Int baseTEnv)
+      transDec (TypeDec var (NameTy ty)) `shouldEvalTo` (Right res)
+    it "enters simple type from another type" $ do
+      let e = emptyStringTable
+          (var, t) = symbol "tyvar" e
+          (ty, t') = symbol "int" t
+          (var', t'') = symbol "tyvarr" t'
+          res = Envs baseVEnv (enter var' Types.Int $ enter var Types.Int baseTEnv)
+      transDecs [TypeDec var (NameTy ty), TypeDec var' (NameTy var)] `shouldEvalTo` (Right res)
+    it "enters array type into type environment" $ do
+      let e = emptyStringTable
+          (var, t) = symbol "tyvar" e
+          (ty, t') = symbol "int" t
+          res = Envs baseVEnv (enter var (Types.Array Types.Int (Unique 0)) baseTEnv)
+      transDec (TypeDec var (ArrayTy ty)) `shouldEvalTo` (Right res)
+    it "enters variable of array type into environment" $ do
+      let e = emptyStringTable
+          (var, t) = symbol "tyvar" e
+          (ty, t') = symbol "int" t
+          (var', t'') = symbol "arrayvar" t'
+          res = Envs (enter var' (VarEntry (Types.Array Types.Int (Unique 0))) baseVEnv) (enter var (Types.Array Types.Int (Unique 0)) baseTEnv)
+      transDecs [TypeDec var (ArrayTy ty), VarDec var' (Just var) (ArrayExp var (IntExp 10) (IntExp 0))] `shouldEvalTo` (Right res)
+
+  describe "Tranlate expressions" $ do
+    describe "Op arithmetic" $ do
+      it "type checks 1 + 2" $ do
+        (typeOf <$> (transExp (OpExp (IntExp 1) PlusOp (IntExp 2)))) `shouldEvalTo` (Right Types.Int)
